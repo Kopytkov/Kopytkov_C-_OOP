@@ -40,7 +40,6 @@ struct RGB {
     uint8_t r, g, b;
 };
 
-#pragma pack(pop)
 struct BMPImage
 {
     BMP bmp;
@@ -101,6 +100,7 @@ struct BMPImage
         outfile.write(reinterpret_cast<const char*>(dib.data()), dib.size());
     }
 };
+#pragma pack(pop)
 
 Complex toC(uint32_t x, uint32_t y, uint32_t w, uint32_t h){
     float xComplex = 3 * (x / float(w)) - 2;
@@ -115,7 +115,7 @@ uint32_t M(const Complex c){
     while (z.len() < 4){
         z = z * z + c;
         n++;
-        if (n > 15){
+        if (n > 17){
             return 0 ;
         }
     }
@@ -130,9 +130,9 @@ void Calc (BMPImage& bmpImage){
             Complex c = toC(x, y, w, h);
             uint32_t n = M(c);
             RGB color = {
-                static_cast<uint8_t>(n * 15), 
-                static_cast<uint8_t>(n * 15), 
-                static_cast<uint8_t>(n * 15)
+                static_cast<uint8_t>(n * 17), 
+                static_cast<uint8_t>(n * 17), 
+                static_cast<uint8_t>(n * 17)
             };
             // RGB color;
             // color.r = color.b = color.b = n * 15;
@@ -167,28 +167,45 @@ int main(){
     // << "Size BMP = " << sizeof(BMP) << std::endl;
     // // << "Size FileName = " << sizeof(fileName) << std::endl;
 
-    BMPImage bmpimage;
+    BMPImage bmpimageOld;
     
     std::fstream file("C:\\Users\\suren\\.vscode\\C++ OOP\\filicheck.bmp", std::ios::binary | std::ios::in);
     if (!file.is_open()) {
         std::cerr << "Error: could not open file." << std::endl;
         return 1;
     }
-    bmpimage.Read(file);
+    bmpimageOld.Read(file);
     file.close();
+    // Сохраняем изменения в новый файл
+    Calc(bmpimageOld);
+    std::ofstream outfileOld("C:\\Users\\suren\\.vscode\\C++ OOP\\outputCalcOld.bmp", std::ios::binary);
+    bmpimageOld.write(outfileOld);
+    outfileOld.close();
 
+
+
+    // Создаем изображение размером 800x600
+    BMPImage bmpimage(1200, 900);
+
+    // Вычисляем фрактал и заполняем изображение
+    Calc(bmpimage);
+
+    // Сохраняем результат в файл
+    std::ofstream outfile("C:\\Users\\suren\\.vscode\\C++ OOP\\outputCalc.bmp", std::ios::binary);
+    if (!outfile) {
+        std::cerr << "Error: could not open file for writing." << std::endl;
+        return 1;
+    }
+    bmpimage.write(outfile);
+    outfile.close();
+
+    
     // // Тестируем получение пикселя
     // RGB pixel = bmpimage.GetPixel(0, 0);
     // std::cout << "RGB at (0, 0): (" << (int)pixel.r << ", " << (int)pixel.g << ", " << (int)pixel.b << ")" << std::endl;
 
     // // Тестируем изменение пикселя
     // bmpimage.SetPixel(0, 0, {255, 0, 0});  // Устанавливаем красный цвет для пикселя (0, 0)
-
-    // Сохраняем изменения в новый файл
-    Calc(bmpimage);
-    std::ofstream outfile("C:\\Users\\suren\\.vscode\\C++ OOP\\outputCalc.bmp", std::ios::binary);
-    bmpimage.write(outfile);
-    outfile.close();
 
     return 0;
 
